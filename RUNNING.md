@@ -1,0 +1,229 @@
+# Running the Testing Project
+
+This document explains how to run the project locally, with Docker, and on Kubernetes. It also explains Flux CD and the role it plays in this repository.
+
+## 1. Prerequisites
+
+Before running the project, make sure the following services and tools are available:
+
+- Node.js and npm
+- Docker (Docker Desktop or Docker Engine)
+- kubectl
+- Minikube or another Kubernetes cluster
+- Flux CLI (only required if using Flux CD)
+
+### Recommended service startup order
+
+1. Start Docker
+2. Start your Kubernetes cluster (`minikube start` if you are using Minikube)
+3. Verify `kubectl` is pointed at the correct cluster
+4. If using Flux, ensure Flux is installed and healthy
+
+---
+
+## 2. Run locally with Vite
+
+This is the simplest development mode.
+
+1. Open the project root:
+   - `/Users/uditsingh/DataxisLabs/Testing_Project/Testing_proj`
+
+2. Install dependencies:
+
+```bash
+npm install
+```
+
+3. Start the development server:
+
+```bash
+npm run dev
+```
+
+4. Open the app in the browser:
+
+```text
+http://localhost:5173
+```
+
+> This runs the React + Vite app directly and is best for development and live reload.
+
+---
+
+## 3. Build and preview locally
+
+Use this when you want to verify the production build without Docker.
+
+1. Build the app:
+
+```bash
+npm run build
+```
+
+2. Preview the build:
+
+```bash
+npm run preview
+```
+
+3. Open the URL shown by Vite (commonly `http://localhost:4173`).
+
+---
+
+## 4. Run using Docker
+
+Your repository contains a `Dockerfile` that builds the app and serves it with `nginx`.
+
+1. Start Docker.
+
+2. Build the Docker image:
+
+```bash
+docker build -t testing-proj .
+```
+
+3. Run the container:
+
+```bash
+docker run -d --name testing-proj-container -p 8080:80 testing-proj
+```
+
+4. Open the app:
+
+```text
+http://localhost:8080
+```
+
+### Notes
+
+- If you change dependencies or source files, rebuild the image.
+- The Docker runtime uses the static build output from `dist` and serves it from NGINX.
+
+---
+
+## 5. Run on Kubernetes
+
+The Kubernetes manifests are under:
+
+- `src/clusters/my-cluster/kustomization.yaml`
+- `src/clusters/my-cluster/apps/react-app/deployment.yaml`
+- `src/clusters/my-cluster/apps/react-app/service.yaml`
+
+### Important details
+
+- Deployment image: `uditdataxis12345/react-app:1.0`
+- Service type: `NodePort`
+- NodePort: `30007`
+
+### Deploy steps
+
+1. Start Minikube or your Kubernetes cluster.
+
+```bash
+minikube start
+```
+
+2. Verify cluster access:
+
+```bash
+kubectl get nodes
+```
+
+3. Apply the Kustomize configuration:
+
+```bash
+kubectl apply -k src/clusters/my-cluster
+```
+
+4. Check the deployment and service:
+
+```bash
+kubectl get pods
+kubectl get services
+```
+
+5. Open the app on Minikube:
+
+```bash
+minikube service react-app-service --url
+```
+
+---
+
+## 6. Flux CD and its role
+
+Flux is a GitOps tool that automates deployments by watching a Git repository for manifest changes and applying them to a Kubernetes cluster.
+
+### What Flux does in this project
+
+- Tracks the repository state for Kubernetes manifests
+- Applies `kustomize` changes automatically when the Git repo updates
+- Keeps the cluster configuration synced with source control
+- Helps deploy the React app to Kubernetes without manual `kubectl apply` every time
+
+### Why Flux is useful here
+
+- It enforces a GitOps workflow: manifest changes in Git become cluster changes.
+- It removes the need to run deployment commands manually after each update.
+- It is the CD (continuous delivery) part of your project stack.
+
+### Role of Flux in starting the project
+
+Flux is not required to run the app locally or via Docker. It is required only for the GitOps/Kubernetes deployment path.
+
+If you want the cluster to stay in sync automatically, Flux should be installed and configured on your cluster.
+
+### Basic Flux workflow
+
+1. Install Flux on your cluster:
+
+```bash
+flux install
+```
+
+2. Create a Git source and Kustomization for the cluster (example commands from the docs):
+
+```bash
+flux create source git react-app-repo \
+  --url=https://github.com/yourusername/yourrepo \
+  --branch=main \
+  --interval=30s
+
+flux create kustomization react-app \
+  --source=react-app-repo \
+  --path=./src/clusters/my-cluster \
+  --prune=true \
+  --interval=5m
+```
+
+3. Push changes to Git. Flux will detect them and apply them to the cluster.
+
+### When to start Flux
+
+- Start Flux after your cluster is ready and `kubectl` is configured.
+- Flux must be running in the cluster to reconcile the manifests.
+- If `flux get all -n flux-system` fails, fix Flux installation before relying on automated deployment.
+
+---
+
+## 7. Useful commands
+
+- `npm run dev` — start Vite development server
+- `npm run build` — build the production app
+- `npm run preview` — preview the production build
+- `docker build -t testing-proj .` — build Docker image
+- `docker run -d --name testing-proj-container -p 8080:80 testing-proj` — run Docker container
+- `kubectl apply -k src/clusters/my-cluster` — deploy to Kubernetes
+- `kubectl get pods` — check pod status
+- `kubectl get services` — check service exposure
+- `minikube service react-app-service --url` — get the app URL
+- `flux get all -n flux-system` — check Flux status
+
+---
+
+## 8. Troubleshooting
+
+- If the app does not start locally, check that `npm install` completed successfully.
+- If Docker cannot build, verify Docker Desktop is running.
+- If Kubernetes deployment fails, verify the image `uditdataxis12345/react-app:1.0` is available in the cluster.
+- If Flux status is not healthy, inspect Flux logs and cluster connectivity.
