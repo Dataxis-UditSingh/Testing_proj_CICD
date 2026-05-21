@@ -206,7 +206,37 @@ flux create kustomization react-app \
 
 ---
 
-## 7. Useful commands
+## 7. CD health check
+
+Use these commands to verify Flux is working and your app is deployed:
+
+```bash
+kubectl get pods -n flux-system
+kubectl get gitrepository flux-system -n flux-system
+kubectl get kustomization flux-system -n flux-system
+kubectl get deployment react-app -n default
+kubectl get service react-app-service -n default
+```
+
+If any of these are not healthy, inspect the details:
+
+```bash
+kubectl describe gitrepository flux-system -n flux-system
+kubectl describe kustomization flux-system -n flux-system
+kubectl logs deployment/kustomize-controller -n flux-system
+```
+
+Expected healthy output:
+
+- all Flux pods `Running`
+- `GitRepository` `Ready` and artifact stored
+- `Kustomization` `Ready` with `Applied revision`
+- `react-app` deployment `1/1` ready
+- `react-app-service` exists and exposes NodePort
+
+---
+
+## 8. Useful commands
 
 - `npm run dev` — start Vite development server
 - `npm run build` — build the production app
