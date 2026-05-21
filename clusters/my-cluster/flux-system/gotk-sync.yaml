@@ -11,7 +11,7 @@ spec:
     branch: main
   secretRef:
     name: flux-system
-  url: https://github.com/Dataxis-UditSingh/Testing_proj.git
+  url: ssh://git@github.com/Dataxis-UditSingh/Testing_proj
 ---
 apiVersion: kustomize.toolkit.fluxcd.io/v1
 kind: Kustomization
