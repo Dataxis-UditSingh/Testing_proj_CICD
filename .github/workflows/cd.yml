@@ -11,7 +11,7 @@ jobs:
     if: github.event_name != 'push' || !contains(github.event.head_commit.message, '[skip ci]')
     runs-on: ubuntu-latest
     env:
-      IMAGE_NAME: uditdataxis12345/react-app
+      IMAGE_NAME: uditdataxis11111/react-app
 
     steps:
       - name: Checkout repository

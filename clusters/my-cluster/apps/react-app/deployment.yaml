@@ -15,6 +15,6 @@ spec:
     spec:
       containers:
         - name: react-app
-          image: uditdataxis12345/react-app:1.0.1
+          image: uditdataxis11111/react-app:1.0.1
           ports:
             - containerPort: 80
