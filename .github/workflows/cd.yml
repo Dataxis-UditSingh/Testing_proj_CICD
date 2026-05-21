@@ -48,8 +48,10 @@ jobs:
         run: |
           IMAGE_NAME=${{ env.IMAGE_NAME }}
           IMAGE_TAG=${{ steps.tag.outputs.IMAGE_TAG }}
-          python3 - <<'PY'
-          import pathlib, re
+          python3 - <<PY
+          import pathlib, re, os
+          IMAGE_NAME = os.environ['IMAGE_NAME']
+          IMAGE_TAG = os.environ['IMAGE_TAG']
           path = pathlib.Path('clusters/my-cluster/apps/react-app/deployment.yaml')
           text = path.read_text()
           new = re.sub(
