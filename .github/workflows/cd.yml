@@ -45,9 +45,10 @@ jobs:
             ${{ env.IMAGE_NAME }}:latest
 
       - name: Update deployment image tag
+        env:
+          IMAGE_NAME: ${{ env.IMAGE_NAME }}
+          IMAGE_TAG: ${{ steps.tag.outputs.IMAGE_TAG }}
         run: |
-          IMAGE_NAME=${{ env.IMAGE_NAME }}
-          IMAGE_TAG=${{ steps.tag.outputs.IMAGE_TAG }}
           python3 - <<PY
           import pathlib, re, os
           IMAGE_NAME = os.environ['IMAGE_NAME']
