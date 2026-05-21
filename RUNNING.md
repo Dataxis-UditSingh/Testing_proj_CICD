@@ -198,6 +198,22 @@ flux create kustomization react-app \
 
 3. Push changes to Git. Flux will detect them and apply them to the cluster.
 
+### GitHub Actions CI/CD
+
+This repository now includes a GitHub Actions workflow at `.github/workflows/cd.yml`.
+When you push to `main`, the workflow will:
+
+- build the Docker image using `Dockerfile`
+- push it to Docker Hub as `uditdataxis12345/react-app`
+- update `clusters/my-cluster/apps/react-app/deployment.yaml` with the new image tag
+- push the manifest change back to `main` using `[skip ci]` so the workflow does not loop
+- allow Flux to detect the updated deployment manifest and apply it to the cluster
+
+You must configure these repository secrets in GitHub:
+
+- `DOCKERHUB_USERNAME`
+- `DOCKERHUB_TOKEN`
+
 ### When to start Flux
 
 - Start Flux after your cluster is ready and `kubectl` is configured.

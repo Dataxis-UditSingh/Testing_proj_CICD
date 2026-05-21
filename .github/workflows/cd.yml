@@ -1,0 +1,72 @@
+name: Build and deploy Docker image
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+jobs:
+  build-and-deploy:
+    if: github.event_name != 'push' || !contains(github.event.head_commit.message, '[skip ci]')
+    runs-on: ubuntu-latest
+    env:
+      IMAGE_NAME: uditdataxis12345/react-app
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: true
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Log in to Docker Hub
+        uses: docker/login-action@v5
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Set image tag
+        id: tag
+        run: |
+          SHORT_SHA=${GITHUB_SHA::8}
+          echo "IMAGE_TAG=$SHORT_SHA" >> $GITHUB_OUTPUT
+
+      - name: Build and push Docker image
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: ./Dockerfile
+          push: true
+          tags: |
+            ${{ env.IMAGE_NAME }}:${{ steps.tag.outputs.IMAGE_TAG }}
+            ${{ env.IMAGE_NAME }}:latest
+
+      - name: Update deployment image tag
+        run: |
+          IMAGE_NAME=${{ env.IMAGE_NAME }}
+          IMAGE_TAG=${{ steps.tag.outputs.IMAGE_TAG }}
+          python3 - <<'PY'
+          import pathlib, re
+          path = pathlib.Path('clusters/my-cluster/apps/react-app/deployment.yaml')
+          text = path.read_text()
+          new = re.sub(
+              r'^(\s*image:\s*).*$',
+              rf'\1{IMAGE_NAME}:{IMAGE_TAG}',
+              text,
+              flags=re.MULTILINE,
+          )
+          if text != new:
+              path.write_text(new)
+          PY
+          git config user.name 'github-actions[bot]'
+          git config user.email 'github-actions[bot]@users.noreply.github.com'
+          if ! git diff --quiet; then
+            git add clusters/my-cluster/apps/react-app/deployment.yaml
+            git commit -m "ci: update deployment image to ${IMAGE_TAG} [skip ci]"
+            git push origin HEAD:main
+          else
+            echo 'Deployment manifest already up to date.'
+          fi
