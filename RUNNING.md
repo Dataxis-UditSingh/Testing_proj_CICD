@@ -198,6 +198,45 @@ flux create kustomization react-app \
 
 3. Push changes to Git. Flux will detect them and apply them to the cluster.
 
+---
+
+## 7. Known deployment issue and root cause
+
+During the CD process, the GitHub Actions workflow was completing successfully, but the app did not update on Minikube. The root cause was an image architecture mismatch:
+
+- The workflow built and pushed a Docker image from `ubuntu-latest`, which by default produced an `amd64` image.
+- The Minikube cluster was running on an Apple Silicon machine or another `arm64` environment.
+- Kubernetes tried to pull the new image tag, but the node could not find a matching `linux/arm64` manifest.
+- This caused the pod to enter `ImagePullBackOff` with the error: `no matching manifest for linux/arm64/v8`.
+
+### Why the old app still appeared
+
+- Flux/CD updated the Deployment manifest with the new image tag.
+- Kubernetes created a new ReplicaSet, but the new pod could not start because the image was incompatible with the node architecture.
+- The old running pod stayed behind or the service still routed to the last healthy pod, so the app page continued to show the old content.
+
+### Fix applied in this project
+
+The workflow was updated to build a multi-architecture image using Buildx and QEMU:
+
+- `docker/setup-qemu-action@v2` was added
+- `platforms: linux/amd64,linux/arm64` was added to the `docker/build-push-action`
+
+This ensures the pushed image contains both `amd64` and `arm64` variants, so Minikube can pull a compatible image and update the app correctly.
+
+### What to check if this happens again
+
+1. Confirm the deployment is using the correct image tag in `clusters/my-cluster/apps/react-app/deployment.yaml`.
+2. Check the pod status:
+   ```bash
+   kubectl get pods -n default -l app=react-app
+   kubectl describe pod -n default <pod-name>
+   ```
+3. Look for `ImagePullBackOff` and `no matching manifest for linux/arm64/v8`.
+4. If Flux is not syncing immediately, reconcile manually or wait for the next sync interval.
+
+This note explains why the workflow passed but the new app version did not appear on Minikube. It is a CD failure caused by image compatibility, not by GitHub Actions itself.
+
 ### GitHub Actions CI/CD
 
 This repository now includes a GitHub Actions workflow at `.github/workflows/cd.yml`.
@@ -208,6 +247,8 @@ When you push to `main`, the workflow will:
 - update `clusters/my-cluster/apps/react-app/deployment.yaml` with the new image tag
 - push the manifest change back to `main` using `[skip ci]` so the workflow does not loop
 - allow Flux to detect the updated deployment manifest and apply it to the cluster
+
+The image tag is generated from the Git commit SHA and written directly into `deployment.yaml`, so every successful push creates a uniquely tagged image and the Kubernetes manifest always points to the exact new build.
 
 You must configure these repository secrets in GitHub:
 
