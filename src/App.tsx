@@ -8,7 +8,7 @@ function App() {
           Testing project for CICD
         </h1>
         <p className="text-white text-lg text-center mt-4">
-          This was Testing project for checking the CD pipeline using GitHub Actions and FluxCD. The React app is deployed on Kubernetes cluster using FluxCD and the image is built and pushed to Docker Hub using GitHub Actions.
+          This was Testing project for CICD Pipeline chekup
         </p>
       </div>
     </>
