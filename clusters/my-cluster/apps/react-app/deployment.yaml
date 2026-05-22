@@ -15,6 +15,6 @@ spec:
     spec:
       containers:
         - name: react-app
-          image: uditdataxis12345/testing-proj-cicd:latest
+          image: uditdataxis12345/testing-proj-cicd:73b81489
           ports:
             - containerPort: 80
