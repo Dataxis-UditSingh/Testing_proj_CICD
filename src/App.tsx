@@ -10,9 +10,6 @@ function App() {
         <p className="text-white text-lg text-center mt-4">
           This was Testing project for checking the pipeline and GitOps are setup successfully.
         </p>
-        <p className="text-white text-lg text-center mt-4">
-          This was after changes setting.
-        </p>
       </div>
     </>
   );
