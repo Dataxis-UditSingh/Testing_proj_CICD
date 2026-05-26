@@ -3,7 +3,7 @@ import "./App.css";
 function App() {
   return (
     <>
-      <div className="h-screen flex items-center justify-center flex-col bg-gray-500">
+      <div className="h-screen flex items-center justify-center flex-col bg-black">
         <h1 className="text-blue-800 text-5xl font-semibold text-center">
           Testing project for CICD
         </h1>
