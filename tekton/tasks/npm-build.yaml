@@ -1,0 +1,18 @@
+apiVersion: tekton.dev/v1
+kind: Task
+metadata:
+  name: npm-build
+  namespace: tekton-ci
+spec:
+  description: Install dependencies, run lint, and build the React app.
+  workspaces:
+    - name: source
+  steps:
+    - name: install-lint-build
+      image: node:20-alpine
+      workingDir: $(workspaces.source.path)/repo
+      script: |
+        set -e
+        npm ci
+        npm run lint
+        npm run build

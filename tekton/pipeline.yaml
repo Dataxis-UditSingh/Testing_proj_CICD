@@ -1,0 +1,57 @@
+apiVersion: tekton.dev/v1
+kind: Pipeline
+metadata:
+  name: testing-proj-ci
+  namespace: tekton-ci
+spec:
+  description: Build, lint, and publish the React app image from the current repository.
+  params:
+    - name: repo-url
+      type: string
+      default: https://github.com/uditdataxis12345/testing_proj_CICD.git
+    - name: revision
+      type: string
+      default: main
+    - name: image-name
+      type: string
+      default: uditdataxis12345/testing-proj-cicd
+    - name: image-tag
+      type: string
+      default: latest
+  workspaces:
+    - name: source
+  tasks:
+    - name: clone-repo
+      taskRef:
+        name: git-clone-source
+      params:
+        - name: repo-url
+          value: $(params.repo-url)
+        - name: revision
+          value: $(params.revision)
+      workspaces:
+        - name: source
+          workspace: source
+
+    - name: npm-build
+      runAfter:
+        - clone-repo
+      taskRef:
+        name: npm-build
+      workspaces:
+        - name: source
+          workspace: source
+
+    - name: buildah-push
+      runAfter:
+        - npm-build
+      taskRef:
+        name: buildah-push
+      params:
+        - name: image-name
+          value: $(params.image-name)
+        - name: image-tag
+          value: $(params.image-tag)
+      workspaces:
+        - name: source
+          workspace: source

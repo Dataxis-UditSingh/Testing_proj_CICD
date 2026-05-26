@@ -1,0 +1,7 @@
+resources:
+  - namespace.yaml
+  - pvc.yaml
+  - tasks/git-clone.yaml
+  - tasks/npm-build.yaml
+  - tasks/buildah-push.yaml
+  - pipeline.yaml

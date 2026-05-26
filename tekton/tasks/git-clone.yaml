@@ -1,0 +1,23 @@
+apiVersion: tekton.dev/v1
+kind: Task
+metadata:
+  name: git-clone-source
+  namespace: tekton-ci
+spec:
+  description: Clone the application repository into the shared workspace.
+  params:
+    - name: repo-url
+      type: string
+    - name: revision
+      type: string
+      default: main
+  workspaces:
+    - name: source
+  steps:
+    - name: clone
+      image: alpine/git:2.47.1
+      script: |
+        set -e
+        mkdir -p "$(workspaces.source.path)"
+        rm -rf "$(workspaces.source.path)/repo"
+        git clone --depth 1 --branch "$(params.revision)" "$(params.repo-url)" "$(workspaces.source.path)/repo"

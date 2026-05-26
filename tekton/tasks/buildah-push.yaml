@@ -1,0 +1,43 @@
+apiVersion: tekton.dev/v1
+kind: Task
+metadata:
+  name: buildah-push
+  namespace: tekton-ci
+spec:
+  description: Build the Docker image with Buildah and push it to Docker Hub.
+  params:
+    - name: image-name
+      type: string
+    - name: image-tag
+      type: string
+    - name: buildah-image
+      type: string
+      default: quay.io/buildah/stable:v1.38.0
+  workspaces:
+    - name: source
+  volumes:
+    - name: docker-config
+      secret:
+        secretName: dockerhub-creds
+  steps:
+    - name: build-and-push
+      image: $(params.buildah-image)
+      workingDir: $(workspaces.source.path)/repo
+      env:
+        - name: HOME
+          value: /tekton/home
+      securityContext:
+        privileged: true
+      volumeMounts:
+        - name: docker-config
+          mountPath: /tekton/home/.docker
+      script: |
+        set -e
+        buildah --storage-driver=vfs bud \
+          --format=docker \
+          -f Dockerfile \
+          -t "$(params.image-name):$(params.image-tag)" \
+          .
+        buildah --storage-driver=vfs push \
+          --format=v2s2 \
+          "$(params.image-name):$(params.image-tag)"

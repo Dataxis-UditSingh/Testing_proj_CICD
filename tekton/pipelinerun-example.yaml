@@ -1,0 +1,21 @@
+apiVersion: tekton.dev/v1
+kind: PipelineRun
+metadata:
+  name: testing-proj-ci-run
+  namespace: tekton-ci
+spec:
+  pipelineRef:
+    name: testing-proj-ci
+  params:
+    - name: repo-url
+      value: https://github.com/uditdataxis12345/testing_proj_CICD.git
+    - name: revision
+      value: main
+    - name: image-name
+      value: uditdataxis12345/testing-proj-cicd
+    - name: image-tag
+      value: latest
+  workspaces:
+    - name: source
+      persistentVolumeClaim:
+        claimName: tekton-source-pvc
