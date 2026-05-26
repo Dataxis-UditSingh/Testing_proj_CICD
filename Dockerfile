@@ -1,5 +1,5 @@
 # Stage 1: build the React/Vite app
-FROM node:20-alpine AS builder
+FROM docker.io/library/node:20-alpine AS builder
 
 WORKDIR /app
 
@@ -12,7 +12,7 @@ COPY . .
 RUN npm run build
 
 # Stage 2: serve the built app with nginx
-FROM nginx:alpine AS runtime
+FROM docker.io/library/nginx:alpine AS runtime
 
 COPY --from=builder /app/dist /usr/share/nginx/html
 

@@ -8,7 +8,7 @@ spec:
     name: testing-proj-ci
   params:
     - name: repo-url
-      value: https://github.com/uditdataxis12345/testing_proj_CICD.git
+      value: https://github.com/Dataxis-UditSingh/Testing_proj_CICD.git
     - name: revision
       value: main
     - name: image-name
