@@ -33,6 +33,16 @@ spec:
           mountPath: /tekton/home/.docker
       script: |
         set -e
+
+        DOCKER_CONFIG_PATH="/tekton/home/.docker"
+        AUTHFILE_PATH="/tmp/docker-config/config.json"
+
+        mkdir -p "/tmp/docker-config"
+
+        if [ ! -f "$AUTHFILE_PATH" ] && [ -f "$DOCKER_CONFIG_PATH/.dockerconfigjson" ]; then
+          cp "$DOCKER_CONFIG_PATH/.dockerconfigjson" "$AUTHFILE_PATH"
+        fi
+
         buildah --storage-driver=vfs bud \
           --format=docker \
           -f Dockerfile \
@@ -40,4 +50,5 @@ spec:
           .
         buildah --storage-driver=vfs push \
           --format=v2s2 \
+          --authfile "$AUTHFILE_PATH" \
           "$(params.image-name):$(params.image-tag)"
