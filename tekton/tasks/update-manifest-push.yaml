@@ -20,7 +20,7 @@ spec:
         secretName: github-auth
   steps:
     - name: update-manifest-and-push
-      image: alpine:3.21
+      image: alpine/git:2.47.1
       env:
         - name: HOME
           value: /tekton/home

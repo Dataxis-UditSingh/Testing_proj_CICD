@@ -1,118 +1,43 @@
 # Tekton CI/CD Setup for Testing_proj_CICD
 
-This document explains the Tekton-based CI flow added to this repository, what was added, how to install and run it, and how to verify the complete CI/CD pipeline.
+This document explains the current Tekton-based CI/CD flow for this repository, the required secrets, how to deploy it, and how to verify the full path from Tekton to Git and Kubernetes.
 
 ---
 
-## 1. What was added
+## 1. Current Tekton flow
 
-The following Tekton resources were added to the repository:
+The current Tekton pipeline runs these tasks in order:
 
-### New folders and files
+1. `git-clone-source`
+2. `npm-build`
+3. `buildah-push`
+4. `update-deployment-manifest`
 
-- `tekton/kustomization.yaml`
-  - Applies the Tekton resources in `tekton/`
-- `tekton/namespace.yaml`
-  - Creates the `tekton-ci` namespace
-- `tekton/pvc.yaml`
-  - Creates a shared PVC for the source workspace
-- `tekton/tasks/git-clone.yaml`
-  - Clones the Git repository into the shared workspace
-- `tekton/tasks/npm-build.yaml`
-  - Runs `npm ci`, `npm run lint`, and `npm run build`
-- `tekton/tasks/buildah-push.yaml`
-  - Builds the Docker image with Buildah and pushes it to Docker Hub
-- `tekton/pipeline.yaml`
-  - Pipeline that runs clone → build → image push
-- `tekton/pipelinerun-example.yaml`
-  - Example `PipelineRun` that triggers the pipeline
+### What each task does
 
-### What the CI pipeline does
+- `git-clone-source`: clones the repository into the shared PVC using authenticated GitHub access
+- `npm-build`: runs `npm ci`, `npm run lint`, and `npm run build`
+- `buildah-push`: builds the image with Buildah and pushes it to Docker Hub
+- `update-deployment-manifest`: updates `clusters/my-cluster/apps/react-app/deployment.yaml`, commits the change, and pushes it back to `main`
 
-1. Clones the repository from Git
-2. Installs dependencies with `npm ci`
-3. Runs lint with `npm run lint`
-4. Builds the app with `npm run build`
-5. Builds the Docker image using `Dockerfile`
-6. Pushes the image to Docker Hub
+### Current verified behavior
 
-### Current repository behavior
+The current Tekton flow is verified end-to-end:
 
-- The app build already works locally with `npm run build`
-- The Dockerfile already uses `npm ci` and builds the final image
-- The existing GitHub Actions workflow in `.github/workflows/cd.yml` already builds and pushes multi-architecture images to Docker Hub and updates the deployment manifest in `clusters/my-cluster/apps/react-app/deployment.yaml`
+- `clone-repo` -> `Succeeded`
+- `npm-build` -> `Succeeded`
+- `buildah-push` -> `Succeeded`
+- `update-manifest` -> `Succeeded`
 
-> Tekton currently handles the build and image push part. It does **not** automatically update the deployment manifest yet.
+The latest successful PipelineRun pushed a manifest update commit and the live deployment now uses the updated image tag.
 
 ---
 
-## 2. Current pipeline architecture
+## 2. Required secrets
 
-### Tekton flow
+Create the following secrets in the `tekton-ci` namespace:
 
-```
-PipelineRun
-  -> git-clone-source
-  -> npm-build
-  -> buildah-push
-```
-
-### Important note about CI/CD
-
-You now have two CI/CD paths:
-
-1. **GitHub Actions path**
-   - Builds and pushes the image
-   - Updates the deployment manifest automatically
-2. **Tekton path**
-   - Builds and pushes the image
-   - Does not update the manifest yet
-
-If you want Tekton to fully replace GitHub Actions, the next step is to add a manifest update step or a GitOps update step after the image push.
-
----
-
-## 3. Prerequisites
-
-Before deploying Tekton, ensure the following are available:
-
-- `kubectl`
-- A Kubernetes cluster (Minikube or any reachable cluster)
-- Access to Docker Hub
-- A Docker Hub secret that contains credentials
-
-### Recommended tools
-
-- `kubectl`
-- `docker`
-- `buildah` (optional for local testing)
-- `tkn` (optional but helpful for inspecting Tekton resources)
-
----
-
-## 4. Install Tekton Pipelines
-
-Run the following command to install the Tekton Pipelines CRDs and controllers:
-
-```bash
-kubectl apply -f https://storage.googleapis.com/tekton-releases/pipelines/latest/release.yaml
-```
-
-Wait until the Tekton components are ready:
-
-```bash
-kubectl get pods -n tekton-pipelines
-```
-
-You should see the Tekton controller and webhook pods in `Running` state.
-
----
-
-## 5. Create Docker Hub credentials
-
-Create a secret named `dockerhub-creds` in the `tekton-ci` namespace.
-
-Replace the placeholders with your real Docker Hub credentials:
+### Docker Hub secret
 
 ```bash
 kubectl create secret docker-registry dockerhub-creds \
@@ -122,23 +47,44 @@ kubectl create secret docker-registry dockerhub-creds \
   -n tekton-ci
 ```
 
-If the namespace does not exist yet, create it first:
+### GitHub auth secret
+
+The `update-deployment-manifest` task uses a `github-auth` secret with `username` and `password` keys.
 
 ```bash
-kubectl create namespace tekton-ci
+kubectl create secret generic github-auth \
+  --from-literal=username=<your-github-username> \
+  --from-literal=password=<your-github-pat> \
+  -n tekton-ci
+```
+
+> Use a GitHub PAT that can write to the repository.
+
+---
+
+## 3. Install Tekton
+
+Apply the Tekton Pipelines release:
+
+```bash
+kubectl apply -f https://storage.googleapis.com/tekton-releases/pipelines/latest/release.yaml
+```
+
+Wait until the core controllers are ready:
+
+```bash
+kubectl get pods -n tekton-pipelines
 ```
 
 ---
 
-## 6. Deploy the Tekton resources
-
-Apply the Tekton manifests from the repository:
+## 4. Apply the repository Tekton resources
 
 ```bash
 kubectl apply -k tekton
 ```
 
-Verify the resources were created:
+Verify the resources are present:
 
 ```bash
 kubectl get namespace tekton-ci
@@ -149,202 +95,168 @@ kubectl get task -n tekton-ci
 
 You should see:
 
-- the `tekton-ci` namespace
-- the `tekton-source-pvc`
-- the `testing-proj-ci` pipeline
-- the `git-clone-source`, `npm-build`, and `buildah-push` tasks
+- `tekton-ci`
+- `tekton-source-pvc`
+- `testing-proj-ci`
+- `git-clone-source`, `npm-build`, `buildah-push`, and `update-deployment-manifest`
 
 ---
 
-## 7. Trigger the Tekton CI run
-
-Apply the example PipelineRun:
+## 5. Trigger the pipeline
 
 ```bash
 kubectl apply -f tekton/pipelinerun-example.yaml
 ```
 
-This will start a new PipelineRun named `testing-proj-ci-run`.
+This creates a `PipelineRun` named `testing-proj-ci-run`.
 
-You can also customize the image tag by editing `tekton/pipelinerun-example.yaml`.
-
-Example:
-
-```yaml
-params:
-  - name: image-tag
-    value: latest
-```
-
-If you want a unique tag, replace `latest` with a build-specific tag.
+You can change the image tag by editing `tekton/pipelinerun-example.yaml`.
 
 ---
 
-## 8. How to check the CI pipeline
+## 6. How to verify the Tekton run
 
-### 8.1 Check the PipelineRun status
+### 6.1 Check PipelineRun status
 
 ```bash
 kubectl get pr -n tekton-ci
 ```
 
-You should see `testing-proj-ci-run` in `Running`, `Succeeded`, or `Failed`.
-
-### 8.2 Check the TaskRuns
+### 6.2 Check TaskRun status
 
 ```bash
 kubectl get tr -n tekton-ci
 ```
 
-This shows each task execution created by the PipelineRun.
-
-### 8.3 Check the PipelineRun details
+### 6.3 Describe the PipelineRun if a task fails
 
 ```bash
 kubectl describe pr testing-proj-ci-run -n tekton-ci
 ```
 
-Use this when a task fails and you want to inspect the reason.
+### 6.4 Inspect logs for the latest TaskRun
 
-### 8.4 Check the TaskRun details
-
-```bash
-kubectl describe tr <taskrun-name> -n tekton-ci
-```
-
-Replace `<taskrun-name>` with the actual TaskRun name from `kubectl get tr -n tekton-ci`.
-
-### 8.5 View the logs from the running pods
-
-Find the pod created by the TaskRun:
+Find the pod for the task you want to inspect:
 
 ```bash
 kubectl get pods -n tekton-ci
-```
-
-Then inspect logs:
-
-```bash
 kubectl logs -n tekton-ci -f <pod-name>
 ```
 
-If you want to follow the logs for the most recent PipelineRun pod, use:
+For the current pipeline run, the task pods are labeled by `tekton.dev/pipelineRun=testing-proj-ci-run`.
+
+---
+
+## 7. How to verify the full CI/CD path
+
+### 7.1 Verify the pipeline completed successfully
 
 ```bash
-kubectl get pod -n tekton-ci -l tekton.dev/pipelineRun=testing-proj-ci-run -o name
-```
-
-Then pass the returned pod name to `kubectl logs -f`.
-
-### 8.6 Check if the image was pushed successfully
-
-After the `buildah-push` task completes, verify the image exists on Docker Hub.
-
-You can also inspect the TaskRun output:
-
-```bash
+kubectl get pr -n tekton-ci
 kubectl get tr -n tekton-ci
-kubectl describe tr <taskrun-name> -n tekton-ci
 ```
 
-If the task succeeded, the image push step completed successfully.
+Expected outcome:
+
+- `testing-proj-ci-run` -> `Succeeded`
+- `clone-repo`, `npm-build`, `buildah-push`, and `update-manifest` -> `Succeeded`
+
+### 7.2 Verify the manifest update in Git
+
+The `update-deployment-manifest` task pushes a commit to `main`.
+
+Refresh your local refs and inspect the latest remote commit:
+
+```bash
+git fetch origin
+git log --oneline origin/main -n 5
+```
+
+Confirm the manifest file on `origin/main` is updated:
+
+```bash
+git show origin/main:clusters/my-cluster/apps/react-app/deployment.yaml
+```
+
+If your local workspace is behind `origin/main`, run `git pull` or `git reset --hard origin/main` before comparing files.
+
+### 7.3 Verify the live cluster deployment
+
+Check the image currently running in the cluster:
+
+```bash
+kubectl get deployment react-app -n default -o jsonpath='{.spec.template.spec.containers[0].image}{"\n"}'
+```
+
+You should see the same image tag that appears in the manifest on `origin/main`.
+
+### 7.4 Confirm the Tekton task logs
+
+Inspect the `update-manifest` TaskRun logs to prove the task pushed the manifest change:
+
+```bash
+TR=testing-proj-ci-run-update-manifest
+POD=$(kubectl get taskrun $TR -n tekton-ci -o jsonpath='{.status.podName}')
+kubectl logs $POD -n tekton-ci --all-containers=true
+```
+
+Expected log excerpts include:
+
+- `git pull --rebase origin main`
+- `ci: update deployment image to ...`
+- `git push ... HEAD:main`
 
 ---
 
-## 9. How to check the full CI/CD flow
-
-### 9.1 Tekton CI path
-
-Check all of the following:
-
-1. `kubectl get pr -n tekton-ci`
-2. `kubectl get tr -n tekton-ci`
-3. `kubectl logs -n tekton-ci -f <pod-name>`
-4. Docker Hub image exists for the pushed tag
-
-### 9.2 Existing GitHub Actions path
-
-The existing workflow in `.github/workflows/cd.yml` should also be checked separately:
-
-1. Open GitHub Actions in the repository
-2. Confirm the latest workflow run is `success`
-3. Confirm the deployment manifest in `clusters/my-cluster/apps/react-app/deployment.yaml` is updated to the new image tag
-
-### 9.3 Kubernetes deployment path
-
-After the image is pushed and the deployment manifest is updated, verify the app is running:
-
-```bash
-kubectl get pods
-kubectl get services
-```
-
-If using Minikube:
-
-```bash
-minikube service react-app-service --url
-```
-
-Then open the returned URL in your browser.
-
----
-
-## 10. How to validate the Tekton YAML files
-
-You can render and verify the manifests before applying them:
+## 8. Validate the Tekton YAML before applying
 
 ```bash
 kubectl kustomize tekton
-```
-
-You can also do a client-side dry run:
-
-```bash
 kubectl apply --dry-run=client -k tekton
 ```
 
-If Tekton CRDs are not installed, the dry run will fail with `no matches for kind "Pipeline"`. That is expected until Tekton is installed.
+If Tekton CRDs are not installed, the dry run will fail until Tekton is installed.
 
 ---
 
-## 11. Current limitations
+## 9. Troubleshooting
 
-The current Tekton setup has these limitations:
+### Buildah failure
 
-- It builds and pushes the image
-- It does **not** yet update the deployment manifest automatically
-- It does **not** yet trigger Flux reconciliation directly
+The current task uses inline Docker Hub credentials with `--creds`. If `buildah-push` fails, inspect the TaskRun logs and confirm the `dockerhub-creds` secret exists and contains valid credentials.
 
-If you want the full end-to-end flow from Tekton all the way to the cluster, the next step is to add a post-push step that updates the image tag in `clusters/my-cluster/apps/react-app/deployment.yaml` or to integrate Tekton with a GitOps workflow.
+### Manifest update failure
 
----
+If `update-deployment-manifest` fails, inspect the TaskRun logs and confirm:
 
-## 12. Next steps
+- `github-auth` exists in `tekton-ci`
+- the secret contains `username` and `password`
+- the task image is `alpine/git:2.47.1`
 
-### Recommended next step
+### Local manifest is stale
 
-Add a manifest update step so Tekton can update the image tag in the Kubernetes deployment manifest.
+If the local file differs from the remote manifest, refresh the repo state first:
 
-Possible approaches:
-
-1. **Use a Git commit step**
-   - Update `clusters/my-cluster/apps/react-app/deployment.yaml`
-   - Commit and push the new image tag back to the repository
-2. **Use a separate automation job**
-   - Trigger a script that edits the manifest after the image push
-3. **Use GitOps-native automation**
-   - Let Flux watch the repository and reconcile the updated manifest
-
-### Additional improvements
-
-- Add a `PipelineRun` parameter for `image-tag`
-- Add a `buildah` multi-platform build for `linux/amd64` and `linux/arm64`
-- Add integration with `docker/setup-buildx` style behavior
-- Add a cleanup task to remove temporary artifacts
+```bash
+git fetch origin
+git pull --ff-only
+```
 
 ---
 
-## 13. Quick command summary
+## 10. Current status
+
+This repository now has a Tekton pipeline that:
+
+- builds and pushes the image
+- updates the deployment manifest in Git
+- allows the cluster to reconcile the new image through the repository state
+
+If you want Tekton to be the only automation path, avoid running the older GitHub Actions path for the same manifest updates, or disable the duplicate workflow.
+
+---
+
+## 11. Quick command summary
 
 ### Install Tekton
 
@@ -352,13 +264,18 @@ Possible approaches:
 kubectl apply -f https://storage.googleapis.com/tekton-releases/pipelines/latest/release.yaml
 ```
 
-### Create secret
+### Create secrets
 
 ```bash
 kubectl create secret docker-registry dockerhub-creds \
   --docker-username=<your-dockerhub-username> \
   --docker-password=<your-dockerhub-password> \
   --docker-email=<your-email> \
+  -n tekton-ci
+
+kubectl create secret generic github-auth \
+  --from-literal=username=<your-github-username> \
+  --from-literal=password=<your-github-pat> \
   -n tekton-ci
 ```
 
@@ -374,7 +291,7 @@ kubectl apply -k tekton
 kubectl apply -f tekton/pipelinerun-example.yaml
 ```
 
-### Check PipelineRun
+### Check status
 
 ```bash
 kubectl get pr -n tekton-ci
@@ -382,23 +299,16 @@ kubectl get tr -n tekton-ci
 kubectl describe pr testing-proj-ci-run -n tekton-ci
 ```
 
-### Check logs
+### Check Git and cluster state
 
 ```bash
-kubectl get pods -n tekton-ci
-kubectl logs -n tekton-ci -f <pod-name>
-```
-
-### Check deployment
-
-```bash
-kubectl get pods
-kubectl get services
-minikube service react-app-service --url
+git fetch origin
+git show origin/main:clusters/my-cluster/apps/react-app/deployment.yaml
+kubectl get deployment react-app -n default -o jsonpath='{.spec.template.spec.containers[0].image}{"\n"}'
 ```
 
 ---
 
-## 14. Final note
+## 12. Final note
 
-You now have a Tekton-based CI path added to the repository, and you also still have the existing GitHub Actions deployment path. The Tekton path is ready to build and push the image, and the next logical step is to complete the manifest update or GitOps handoff so the cluster is updated automatically from the Tekton-generated image.
+The Tekton pipeline now performs the full post-push manifest update step, so the CI flow is no longer limited to image build and push only. The remaining validation is to keep the repository-state and cluster-state aligned and to avoid running duplicate automation paths for the same manifest update.
