@@ -1,0 +1,59 @@
+apiVersion: tekton.dev/v1
+kind: Task
+metadata:
+  name: update-deployment-manifest
+  namespace: tekton-ci
+spec:
+  description: Update the deployment manifest image tag and push the change back to GitHub.
+  params:
+    - name: repo-url
+      type: string
+    - name: image-name
+      type: string
+    - name: image-tag
+      type: string
+  workspaces:
+    - name: source
+  volumes:
+    - name: github-auth
+      secret:
+        secretName: github-auth
+  steps:
+    - name: update-manifest-and-push
+      image: alpine:3.21
+      env:
+        - name: HOME
+          value: /tekton/home
+      volumeMounts:
+        - name: github-auth
+          mountPath: /workspace/github-auth
+          readOnly: true
+      workingDir: $(workspaces.source.path)/repo
+      script: |
+        set -e
+
+        USERNAME="$(cat /workspace/github-auth/username)"
+        PASSWORD="$(cat /workspace/github-auth/password)"
+        REPO_URL="$(params.repo-url)"
+        IMAGE_NAME="$(params.image-name)"
+        IMAGE_TAG="$(params.image-tag)"
+        DEPLOYMENT_PATH="clusters/my-cluster/apps/react-app/deployment.yaml"
+
+        AUTH_REPO_URL="${REPO_URL#https://}"
+        AUTH_REPO_URL="https://$USERNAME:$PASSWORD@$AUTH_REPO_URL"
+
+        git config user.name "tekton-ci-bot"
+        git config user.email "tekton-ci-bot@example.com"
+
+        git pull --rebase origin main
+
+        sed -i -E "s|^([[:space:]]*image:[[:space:]]*).*$|\1${IMAGE_NAME}:${IMAGE_TAG}|" "$DEPLOYMENT_PATH"
+
+        if git diff --quiet -- "$DEPLOYMENT_PATH"; then
+          echo "Deployment manifest already up to date."
+          exit 0
+        fi
+
+        git add "$DEPLOYMENT_PATH"
+        git commit -m "ci: update deployment image to ${IMAGE_TAG}"
+        git push "$AUTH_REPO_URL" HEAD:main

@@ -4,4 +4,5 @@ resources:
   - tasks/git-clone.yaml
   - tasks/npm-build.yaml
   - tasks/buildah-push.yaml
+  - tasks/update-manifest-push.yaml
   - pipeline.yaml
