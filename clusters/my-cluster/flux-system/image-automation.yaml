@@ -1,5 +1,4 @@
 ---
-# Scans Docker Hub for new tags on your image
 apiVersion: image.toolkit.fluxcd.io/v1beta2
 kind: ImageRepository
 metadata:
@@ -9,9 +8,8 @@ spec:
   image: uditdataxis12345/testing-proj-cicd
   interval: 1m0s
   secretRef:
-    name: dockerhub-credentials  # kubectl create secret generic dockerhub-credentials --from-literal=username=<user> --from-literal=password=<token>
+    name: dockerhub-credentials
 ---
-# Selects which tag to deploy (latest semver, or most recent by timestamp)
 apiVersion: image.toolkit.fluxcd.io/v1beta2
 kind: ImagePolicy
 metadata:
@@ -21,14 +19,13 @@ spec:
   imageRepositoryRef:
     name: react-app
   filterTags:
-    pattern: '^[0-9]{14}-[a-f0-9]{8}$'  # matches 20240115123045-abc12345
+    pattern: '^[0-9]{14}-[a-f0-9]{8}$'
     extract: '$0'
   policy:
     alphabetical:
       order: asc
 ---
-# Writes the selected tag back to Git automatically
-apiVersion: image.toolkit.fluxcd.io/v1beta1
+apiVersion: image.toolkit.fluxcd.io/v1beta2
 kind: ImageUpdateAutomation
 metadata:
   name: react-app
