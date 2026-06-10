@@ -38,8 +38,9 @@ jobs:
       - name: Set image tag
         id: tag
         run: |
+          TIMESTAMP=$(date -u +%Y%m%d%H%M%S)
           SHORT_SHA=${GITHUB_SHA::8}
-          echo "IMAGE_TAG=$SHORT_SHA" >> $GITHUB_OUTPUT
+          echo "IMAGE_TAG=${TIMESTAMP}-${SHORT_SHA}" >> $GITHUB_OUTPUT
 
       - name: Build and push Docker image
         uses: docker/build-push-action@v4

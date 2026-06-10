@@ -20,9 +20,12 @@ metadata:
 spec:
   imageRepositoryRef:
     name: react-app
+  filterTags:
+    pattern: '^[0-9]{14}-[a-f0-9]{8}$'  # matches 20240115123045-abc12345
+    extract: '$0'
   policy:
     alphabetical:
-      order: asc  # short-SHA tags sort alphabetically; switch to semver if you adopt semver tagging
+      order: asc
 ---
 # Writes the selected tag back to Git automatically
 apiVersion: image.toolkit.fluxcd.io/v1beta1
