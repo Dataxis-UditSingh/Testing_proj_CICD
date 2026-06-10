@@ -52,32 +52,4 @@ jobs:
             ${{ env.IMAGE_NAME }}:${{ steps.tag.outputs.IMAGE_TAG }}
             ${{ env.IMAGE_NAME }}:latest
 
-      - name: Update deployment image tag
-        env:
-          IMAGE_NAME: ${{ env.IMAGE_NAME }}
-          IMAGE_TAG: ${{ steps.tag.outputs.IMAGE_TAG }}
-        run: |
-          python3 - <<PY
-          import pathlib, re, os
-          IMAGE_NAME = os.environ['IMAGE_NAME']
-          IMAGE_TAG = os.environ['IMAGE_TAG']
-          path = pathlib.Path('clusters/my-cluster/apps/react-app/deployment.yaml')
-          text = path.read_text()
-          new = re.sub(
-              r'^(\s*image:\s*).*$',
-              rf'\1{IMAGE_NAME}:{IMAGE_TAG}',
-              text,
-              flags=re.MULTILINE,
-          )
-          if text != new:
-              path.write_text(new)
-          PY
-          git config user.name 'github-actions[bot]'
-          git config user.email 'github-actions[bot]@users.noreply.github.com'
-          if ! git diff --quiet; then
-            git add clusters/my-cluster/apps/react-app/deployment.yaml
-            git commit -m "ci: update deployment image to ${IMAGE_TAG} [skip ci]"
-            git push origin HEAD:main
-          else
-            echo 'Deployment manifest already up to date.'
-          fi
+      # Image tag update is now handled by Flux Image Automation - no git push needed here

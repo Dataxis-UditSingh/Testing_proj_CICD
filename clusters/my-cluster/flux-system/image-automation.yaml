@@ -1,0 +1,51 @@
+---
+# Scans Docker Hub for new tags on your image
+apiVersion: image.toolkit.fluxcd.io/v1beta2
+kind: ImageRepository
+metadata:
+  name: react-app
+  namespace: flux-system
+spec:
+  image: uditdataxis12345/testing-proj-cicd
+  interval: 1m0s
+  secretRef:
+    name: dockerhub-credentials  # kubectl create secret generic dockerhub-credentials --from-literal=username=<user> --from-literal=password=<token>
+---
+# Selects which tag to deploy (latest semver, or most recent by timestamp)
+apiVersion: image.toolkit.fluxcd.io/v1beta2
+kind: ImagePolicy
+metadata:
+  name: react-app
+  namespace: flux-system
+spec:
+  imageRepositoryRef:
+    name: react-app
+  policy:
+    alphabetical:
+      order: asc  # short-SHA tags sort alphabetically; switch to semver if you adopt semver tagging
+---
+# Writes the selected tag back to Git automatically
+apiVersion: image.toolkit.fluxcd.io/v1beta1
+kind: ImageUpdateAutomation
+metadata:
+  name: react-app
+  namespace: flux-system
+spec:
+  interval: 1m0s
+  sourceRef:
+    kind: GitRepository
+    name: flux-system
+  git:
+    checkout:
+      ref:
+        branch: main
+    commit:
+      author:
+        name: fluxcd-bot
+        email: fluxcd-bot@users.noreply.github.com
+      messageTemplate: "ci: update react-app image to {{range .Updated.Images}}{{.}}{{end}} [skip ci]"
+    push:
+      branch: main
+  update:
+    strategy: Setters
+    path: ./clusters/my-cluster/apps/react-app

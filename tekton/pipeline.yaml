@@ -56,18 +56,3 @@ spec:
         - name: source
           workspace: source
 
-    - name: update-manifest
-      runAfter:
-        - buildah-push
-      taskRef:
-        name: update-deployment-manifest
-      params:
-        - name: repo-url
-          value: $(params.repo-url)
-        - name: image-name
-          value: $(params.image-name)
-        - name: image-tag
-          value: $(params.image-tag)
-      workspaces:
-        - name: source
-          workspace: source
