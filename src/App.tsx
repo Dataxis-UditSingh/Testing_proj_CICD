@@ -10,6 +10,9 @@ function App() {
         <p className="text-white text-lg text-center mt-4">
           This was Testing project for CICD Pipeline chekup.
         </p>
+        <p className="text-white text-lg text-center mt-4">
+          This was Testing for the policy auto update
+        </p>
       </div>
     </>
   );
