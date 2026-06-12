@@ -12,7 +12,7 @@ function App() {
           This was Testing project for CICD Pipeline chekup.
         </p>
 
-        <p className="text-purple-600 text-lg text-center mt-4">
+        <p className="text-pink-600 text-lg text-center mt-4">
           This was Testing project for Image Automation.
         </p>
       </div>
