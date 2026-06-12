@@ -13,6 +13,8 @@ spec:
       labels:
         app: react-app
     spec:
+      imagePullSecrets:
+        - name: dockerhub-credentials
       containers:
         - name: react-app
           image: uditdataxis12345/testing-proj-cicd:20260612071343-13789974 # {"$imagepolicy": "flux-system:react-app"}
