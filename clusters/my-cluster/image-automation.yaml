@@ -51,4 +51,3 @@ spec:
   update:
     strategy: Setters
     path: ./clusters/my-cluster/apps
-    path: ./clusters/my-cluster/apps/react-app
