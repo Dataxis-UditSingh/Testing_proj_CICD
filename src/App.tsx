@@ -4,7 +4,6 @@ function App() {
   return (
     <>
       <div className="h-screen flex items-center justify-center flex-col bg-black">
-
         <div className="w-96 h-96 mb-8 rounded-full overflow-hidden">
           <img src="https://www.spinny.com/blog/wp-content/uploads/2024/09/videoframe_0.webp" alt="Car_Image" className="h-full w-full object-cover" />
         </div>
