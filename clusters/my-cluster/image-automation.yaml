@@ -19,11 +19,11 @@ spec:
   imageRepositoryRef:
     name: react-app
   filterTags:
-    pattern: '^[0-9]{14}-[a-f0-9]{8}$'
-    extract: '$0'
+    pattern: '^([0-9]{14})-[a-f0-9]{8}$'
+    extract: '$1'
   policy:
-    alphabetical:
-      order: desc
+    numerical:
+      order: asc
 ---
 apiVersion: image.toolkit.fluxcd.io/v1beta2
 kind: ImageUpdateAutomation
