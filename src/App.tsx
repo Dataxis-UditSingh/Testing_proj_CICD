@@ -8,7 +8,7 @@ function App() {
           Testing project for CICD
         </h1>
         
-        <p className="text-white text-lg text-center mt-4">
+        <p className="text-white text-3xl text-center mt-4">
           This was Testing project for CICD Pipeline chekup.
         </p>
 
