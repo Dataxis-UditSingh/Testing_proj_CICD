@@ -44,10 +44,9 @@ spec:
         name: fluxcd-bot
         email: fluxcd-bot@users.noreply.github.com
       messageTemplate: "ci: update react-app image [skip ci]"
-      signOff: false
     push:
       branch: main
-      force: false
   update:
     strategy: Setters
     path: ./clusters/my-cluster/apps
+    path: ./clusters/my-cluster/apps/react-app
