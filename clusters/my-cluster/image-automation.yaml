@@ -6,7 +6,7 @@ metadata:
   namespace: flux-system
 spec:
   image: uditdataxis12345/testing-proj-cicd
-  interval: 30s
+  interval: 1m0s
   secretRef:
     name: dockerhub-credentials
 ---
@@ -31,7 +31,7 @@ metadata:
   name: react-app
   namespace: flux-system
 spec:
-  interval: 30s
+  interval: 1m0s
   sourceRef:
     kind: GitRepository
     name: flux-system
@@ -43,9 +43,9 @@ spec:
       author:
         name: fluxcd-bot
         email: fluxcd-bot@users.noreply.github.com
-      messageTemplate: "ci: update react-app image [skip ci]"
+      messageTemplate: "ci: update react-app image to {{range .Updated.Images}}{{.}}{{end}} [skip ci]"
     push:
       branch: main
   update:
     strategy: Setters
-    path: ./clusters/my-cluster/apps
+    path: ./clusters/my-cluster/apps/react-app
