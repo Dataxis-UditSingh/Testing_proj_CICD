@@ -15,7 +15,7 @@ spec:
     spec:
       containers:
         - name: react-app
-          image: uditdataxis12345/testing-proj-cicd:48497f8e # {"$imagepolicy": "flux-system:react-app"}
+          image: uditdataxis12345/testing-proj-cicd:20260612071343-13789974 # {"$imagepolicy": "flux-system:react-app"}
           imagePullPolicy: Always
           ports:
             - containerPort: 80
