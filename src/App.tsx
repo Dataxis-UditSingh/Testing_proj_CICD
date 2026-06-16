@@ -54,7 +54,11 @@ function App() {
               </span>
 
               <span className="px-4 py-2 rounded-lg bg-pink-500/10 text-pink-300 border border-pink-500/20">
-                Mimikube
+                Minikube
+              </span>
+
+              <span className="px-4 py-2 rounded-lg bg-yellow-500/10 text-yellow-300 border border-yellow-500/20">
+                Gitops
               </span>
             </div>
 
