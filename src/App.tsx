@@ -52,6 +52,10 @@ function App() {
               <span className="px-4 py-2 rounded-lg bg-green-500/10 text-green-300 border border-green-500/20">
                 Kubernetes
               </span>
+
+              <span className="px-4 py-2 rounded-lg bg-pink-500/10 text-pink-300 border border-pink-500/20">
+                Mimikube
+              </span>
             </div>
 
             <div className="mt-8">
