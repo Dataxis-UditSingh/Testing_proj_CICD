@@ -30,7 +30,7 @@ function App() {
             </h1>
 
             <p className="mt-6 text-slate-300 text-lg leading-relaxed">
-              This project demonstrates a complete CI/CD workflow using
+              This project Demonstrates a complete CI/CD workflow using
               Docker, Tekton, FluxCD, and Kubernetes. Every code change
               automatically triggers build, image creation, and deployment
               processes.
