@@ -32,7 +32,7 @@ function App() {
             <p className="mt-6 text-slate-300 text-lg leading-relaxed">
               This project Demonstrates a complete CI/CD workflow using
               Docker, Tekton, FluxCD, and Kubernetes. Every code change
-              automatically triggers build, image creation, and deployment
+              automatically triggers build, Image creation, and deployment
               processes.
             </p>
 
