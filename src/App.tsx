@@ -57,9 +57,9 @@ function App() {
                 Minikube
               </span>
 
-              <span className="px-4 py-2 rounded-lg bg-yellow-500/10 text-yellow-300 border border-yellow-500/20">
+              {/* <span className="px-4 py-2 rounded-lg bg-yellow-500/10 text-yellow-300 border border-yellow-500/20">
                 GitOps
-              </span>
+              </span> */}
             </div>
 
             <div className="mt-8">
