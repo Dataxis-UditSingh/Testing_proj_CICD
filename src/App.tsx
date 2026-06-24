@@ -29,6 +29,8 @@ function App() {
               </span>
             </h1>
 
+            <h1>DevOps Multi-Tenant Test</h1>
+
             <p className="mt-6 text-slate-300 text-lg leading-relaxed">
               This project Demonstrates a complete CI/CD workflow using
               Docker, Tekton, FluxCD, and Kubernetes. Every code change
@@ -57,10 +59,9 @@ function App() {
                 Minikube
               </span>
 
-
-              {/* <span className="px-4 py-2 rounded-lg bg-yellow-500/10 text-yellow-300 border border-yellow-500/20">
+              <span className="px-4 py-2 rounded-lg bg-yellow-500/10 text-yellow-300 border border-yellow-500/20">
                 GitOps
-              </span> */}
+              </span>
             </div>
 
             <div className="mt-8">
