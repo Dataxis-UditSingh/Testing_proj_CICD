@@ -28,7 +28,6 @@ function App() {
                 Testing Project
               </span>
             </h1>
-            
 
             <h1 className="text-xl font-semibold my-2 text-gray-400">DevOps Multi-Tenant Test</h1>
 
