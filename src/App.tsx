@@ -29,7 +29,7 @@ function App() {
               </span>
             </h1>
 
-            <h1 className="text-white">DevOps Multi-Tenant Test</h1>
+            <h1 className="text-xl font-semibold my-2 text-gray-400">DevOps Multi-Tenant Test</h1>
 
             <p className="mt-6 text-slate-300 text-lg leading-relaxed">
               This project Demonstrates a complete CI/CD workflow using
