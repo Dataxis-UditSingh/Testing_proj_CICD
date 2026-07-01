@@ -1,4 +1,7 @@
 import "./App.css";
+import Button from "./components/Button";
+import Heading from "./components/Heading";
+import Tag from "./components/Tag";
 
 function App() {
   return (
@@ -22,12 +25,10 @@ function App() {
               ✓ CI/CD Pipeline Active
             </span>
 
-            <h1 className="mt-6 text-4xl md:text-5xl font-bold text-white leading-tight">
-              CI/CD Pipeline
-              <span className="block text-cyan-400 mt-2">
-                Testing Project
-              </span>
-            </h1>
+            <Heading
+              title="CI/CD Pipeline"
+              highlight="Testing Project"
+            />
 
             <h1 className="text-xl font-semibold my-2 text-gray-400">DevOps Multi-Tenant Test</h1>
 
@@ -39,35 +40,16 @@ function App() {
             </p>
 
             <div className="flex flex-wrap gap-3 mt-8">
-              <span className="px-4 py-2 rounded-lg bg-cyan-500/10 text-cyan-300 border border-cyan-500/20">
-                Docker
-              </span>
-
-              <span className="px-4 py-2 rounded-lg bg-purple-500/10 text-purple-300 border border-purple-500/20">
-                Tekton
-              </span>
-
-              <span className="px-4 py-2 rounded-lg bg-orange-500/10 text-orange-300 border border-orange-500/20">
-                FluxCD
-              </span>
-
-              <span className="px-4 py-2 rounded-lg bg-green-500/10 text-green-300 border border-green-500/20">
-                Kubernetes
-              </span>
-
-              <span className="px-4 py-2 rounded-lg bg-pink-500/10 text-pink-300 border border-pink-500/20">
-                Minikube
-              </span>
-
-              <span className="px-4 py-2 rounded-lg bg-yellow-500/10 text-yellow-300 border border-yellow-500/20">
-                GitOps
-              </span>
+              <Tag className="bg-cyan-500/10 text-cyan-300 border-cyan-500/20">Docker</Tag>
+              <Tag className="bg-purple-500/10 text-purple-300 border-purple-500/20">Tekton</Tag>
+              <Tag className="bg-orange-500/10 text-orange-300 border-orange-500/20">FluxCD</Tag>
+              <Tag className="bg-green-500/10 text-green-300 border-green-500/20">Kubernetes</Tag>
+              <Tag className="bg-pink-500/10 text-pink-300 border-pink-500/20">Minikube</Tag>
+              <Tag className="bg-yellow-500/10 text-yellow-300 border-yellow-500/20">GitOps</Tag>
             </div>
 
             <div className="mt-8">
-              <button className="px-6 py-3 bg-cyan-500 hover:bg-cyan-600 transition-all rounded-xl text-white font-semibold">
-                Pipeline Status: Running
-              </button>
+              <Button>Pipeline Status: Running</Button>
             </div>
           </div>
 
