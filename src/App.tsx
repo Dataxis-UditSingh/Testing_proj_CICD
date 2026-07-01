@@ -44,6 +44,7 @@ function App() {
               <Tag className="bg-purple-500/10 text-purple-300 border-purple-500/20">Tekton</Tag>
               <Tag className="bg-orange-500/10 text-orange-300 border-orange-500/20">FluxCD</Tag>
               <Tag className="bg-green-500/10 text-green-300 border-green-500/20">Kubernetes</Tag>
+               <Tag className="bg-blue-500/10 text-blue-300 border-blue-500/20">N-ginix</Tag>
               <Tag className="bg-pink-500/10 text-pink-300 border-pink-500/20">Minikube</Tag>
               <Tag className="bg-yellow-500/10 text-yellow-300 border-yellow-500/20">GitOps</Tag>
             </div>
